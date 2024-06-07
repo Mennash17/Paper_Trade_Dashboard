@@ -58,14 +58,14 @@
       </table>
     </div>
     <script>
-      const sheetId =
-        "AKfycbwI2WZn0oGCs_17nSF75TW9bKGfNdc65yaqBH-vmgr7cgq-vEvNkYcDCBUX76GoMMKzOw";
+      const sheetId = "AKfycbzTFS1QKhSCDBel_2zzTtwE9gZms-rUMeX0m4034tVVdl9oWfOPygjVJbPN2d3hZ_U";
+      const sheet_name = "Closed Trades";
       const action = "read";
 
       // Function to fetch data from Google Sheets
       async function fetchData() {
         const response = await fetch(
-          `https://script.google.com/macros/s/${sheetId}/exec?path=Sheet1&action=${action}`
+          `https://script.google.com/macros/s/${sheetId}/exec?path=${sheet_name}&action=${action}`
         );
         const data = await response.json();
         console.log(data.data);
