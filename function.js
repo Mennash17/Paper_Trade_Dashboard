@@ -1,5 +1,4 @@
-const sheetId =
-  "AKfycbzTFS1QKhSCDBel_2zzTtwE9gZms-rUMeX0m4034tVVdl9oWfOPygjVJbPN2d3hZ_U";
+const sheetId = "AKfycbzTFS1QKhSCDBel_2zzTtwE9gZms-rUMeX0m4034tVVdl9oWfOPygjVJbPN2d3hZ_U";
 const sheet_name = "Closed Trades";
 const action = "read";
 
@@ -32,6 +31,7 @@ function processTradingData(tradingData) {
         Total_Trades: 0,
         Total_Wins: 0,
         Total_Losses: 0,
+        Success_Rate: 0,
       };
     }
 
@@ -44,11 +44,34 @@ function processTradingData(tradingData) {
       entryStrategyCount[Entry_Strategy].Total_Losses++;
     }
   });
+  Object.values(entryStrategyCount).forEach((strategy) => {
+    strategy.Success_Rate = (strategy.Total_Wins / strategy.Total_Trades) * 100;
+  });
 
   // Convert the counting data object into an array of objects
   const countingDataArray = Object.values(entryStrategyCount);
 
   return countingDataArray;
+}
+
+async function initDataTable() {
+  const data = await fetchData();
+  const loadingIndicator = document.getElementById("loading");
+  const tableWrapper = document.querySelector(".table-wrapper");
+
+  if (data.length > 0) {
+    generateTable(data);
+    $("#dataTable").DataTable(); // Initialize DataTable
+    loadingIndicator.style.display = "none";
+    tableWrapper.style.display = "block";
+    // Adjust height based on content
+    const tableHeight = table.offsetHeight;
+    const maxHeight = Math.min(tableHeight + 50, window.innerHeight * 0.9); // Calculate max height
+    const wrapper = document.querySelector(".table-wrapper");
+    wrapper.style.maxHeight = `${maxHeight}px`; // Set max height
+  } else {
+    loadingIndicator.innerText = "Failed to load data.";
+  }
 }
 
 function generateTable(data) {
@@ -75,23 +98,12 @@ function generateTable(data) {
       cell.appendChild(document.createTextNode(element[key]));
     }
   });
-
-  // Adjust height based on content
-  const tableHeight = table.offsetHeight;
-  const maxHeight = Math.min(tableHeight + 50, window.innerHeight * 0.9); // Calculate max height
-  const wrapper = document.querySelector(".table-wrapper");
-  wrapper.style.maxHeight = `${maxHeight}px`; // Set max height
 }
 
 (async () => {
   const data = await fetchData();
-  const loadingIndicator = document.getElementById("loading");
-  const tableWrapper = document.querySelector(".table-wrapper");
-
   if (data.length > 0) {
-    loadingIndicator.style.display = "none";
-    tableWrapper.style.display = "block";
-    generateTable(data);
+    initDataTable();
   } else {
     loadingIndicator.innerText = "Failed to load data.";
   }
