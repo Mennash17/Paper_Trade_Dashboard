@@ -69,6 +69,13 @@ async function initDataTable() {
     const maxHeight = Math.min(tableHeight + 50, window.innerHeight * 0.9); // Calculate max height
     const wrapper = document.querySelector(".table-wrapper");
     wrapper.style.maxHeight = `${maxHeight}px`; // Set max height
+    $('#dataTable').DataTable({
+        "paging": true,
+        "lengthMenu": [5, 10, 25, 50, 100],
+        "pageLength": 10,
+        "searching": true,
+        "info": true
+    }); // Initialize DataTable with options
   } else {
     loadingIndicator.innerText = "Failed to load data.";
   }
