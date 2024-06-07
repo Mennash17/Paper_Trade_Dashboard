@@ -31,6 +31,7 @@ function processTradingData(tradingData) {
         Total_Trades: 0,
         Total_Wins: 0,
         Total_Losses: 0,
+        Profit: 0,
         Success_Rate: 0,
       };
     }
@@ -43,6 +44,9 @@ function processTradingData(tradingData) {
     if (Loss) {
       entryStrategyCount[Entry_Strategy].Total_Losses++;
     }
+
+    entryStrategyCount[Entry_Strategy].Profit += trade['Sell Value'] - trade['Buy Value'];
+
   });
   Object.values(entryStrategyCount).forEach((strategy) => {
     strategy.Success_Rate = (strategy.Total_Wins / strategy.Total_Trades) * 100;
