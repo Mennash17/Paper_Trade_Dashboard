@@ -16,70 +16,94 @@ async function fetchData() {
   }
 }
 
-function processTradingData(tradingData) {
-  // Initialize an object to store counting data for each Entry Strategy
-  const entryStrategyCount = {};
+function processTradingData(records) {
+    const strategySummary = {};
 
-  // Process each trading data object
-  tradingData.forEach((trade) => {
-    const { "Entry Strategy": Entry_Strategy, Win, Loss } = trade;
+    records.forEach(record => {
+        const {
+            "Entry Strategy": entryStrategy,
+            "Buy Value": buyValue,
+            "Sell Value": sellValue,
+            "P/L %": plPercentage,
+            "Trade Fees": tradeFees,
+            "Win": win,
+            "Loss": loss,
+            "R_Multiple": rMultiple,
+            "Duration": duration
+        } = record;
 
-    // Initialize the counting data object for the Entry Strategy if not already done
-    if (!entryStrategyCount[Entry_Strategy]) {
-      entryStrategyCount[Entry_Strategy] = {
-        Entry_Strategy,
-        Total_Trades: 0,
-        Total_Wins: 0,
-        Total_Losses: 0,
-        Profit: 0,
-        Success_Rate: 0,
-      };
+        if (!strategySummary[entryStrategy]) {
+            strategySummary[entryStrategy] = {
+                "Entry Strategy": entryStrategy,
+                "Total Trades": 0,
+                "Total Wins": 0,
+                "Total Losses": 0,
+                "Total Money Invested": 0,
+                "Total Money Gained": 0,
+                "Total Trade Fees": 0,
+                "Overall P/L %": 0,
+                "Overall Win/Loss Ratio": 0,
+                "Average R Multiple": 0,
+                "Average Trade Duration": 0,
+                "Total P/L %": 0,
+                "Total R Multiple": 0,
+                "Total Duration": 0
+            };
+        }
+
+        const summary = strategySummary[entryStrategy];
+        summary["Total Trades"]++;
+        summary["Total Money Invested"] += buyValue;
+        summary["Total Money Gained"] += sellValue;
+        summary["Total Trade Fees"] += tradeFees;
+        summary["Total P/L %"] += plPercentage;
+        summary["Total R Multiple"] += rMultiple;
+        summary["Total Duration"] += duration;
+
+        if (win) summary["Total Wins"]++;
+        if (loss) summary["Total Losses"]++;
+    });
+
+    const result = [];
+
+    for (const strategy in strategySummary) {
+        const summary = strategySummary[strategy];
+        summary["Overall P/L %"] = (summary["Total P/L %"] / summary["Total Trades"]) * 100;
+        summary["Overall Win/Loss Ratio"] = summary["Total Wins"] / (summary["Total Losses"] || 1);
+        summary["Average R Multiple"] = summary["Total R Multiple"] / summary["Total Trades"];
+        summary["Average Trade Duration"] = summary["Total Duration"] / summary["Total Trades"];
+        delete summary["Total P/L %"];
+        delete summary["Total R Multiple"];
+        delete summary["Total Duration"];
+        result.push(summary);
     }
 
-    // Update the counting data based on Win and Loss values
-    entryStrategyCount[Entry_Strategy].Total_Trades++;
-    if (Win) {
-      entryStrategyCount[Entry_Strategy].Total_Wins++;
-    }
-    if (Loss) {
-      entryStrategyCount[Entry_Strategy].Total_Losses++;
-    }
-
-    entryStrategyCount[Entry_Strategy].Profit += trade['Sell Value'] - trade['Buy Value'];
-
-  });
-  Object.values(entryStrategyCount).forEach((strategy) => {
-    strategy.Success_Rate = (strategy.Total_Wins / strategy.Total_Trades) * 100;
-  });
-
-  // Convert the counting data object into an array of objects
-  const countingDataArray = Object.values(entryStrategyCount);
-
-  return countingDataArray;
+    return result;
 }
 
 async function initDataTable() {
-  const data = await fetchData();
-  const loadingIndicator = document.getElementById("loading");
-  const tableWrapper = document.querySelector(".table-wrapper");
+    const data = await fetchData();
+    const loadingIndicator = document.getElementById("loading");
+    const tableWrapper = document.querySelector(".table-wrapper");
+    const dashboard = document.getElementById("dashboard");
 
-  if (data.length > 0) {
-    generateTable(data);
-    $("#dataTable").DataTable(); // Initialize DataTable
-    loadingIndicator.style.display = "none";
-    tableWrapper.style.display = "block";
-    // Adjust height based on content
-    const tableHeight = table.offsetHeight;
-    const maxHeight = Math.min(tableHeight + 50, window.innerHeight * 0.9); // Calculate max height
-    const wrapper = document.querySelector(".table-wrapper");
-    wrapper.style.maxHeight = `${maxHeight}px`; // Set max height
-    $('#dataTable').DataTable({
-        "paging": true,
-        "lengthMenu": [5, 10, 25, 50, 100],
-        "pageLength": 10,
-        "searching": true,
-        "info": true
-    }); // Initialize DataTable with options
+    if (data.length > 0) {
+        loadingIndicator.style.display = "none";
+        tableWrapper.style.display = "block";
+        generateTable(data);
+        $("#dataTable").DataTable(); 
+
+        // Adjust the dashboard size
+        dashboard.style.width = "90vw";
+        dashboard.style.height = "90vh";
+
+        $('#dataTable').DataTable({
+            paging: true,
+            lengthMenu: [5, 10, 25, 50, 100],
+            pageLength: 10,
+            searching: true,
+            info: true
+        }); // Initialize DataTable with options
   } else {
     loadingIndicator.innerText = "Failed to load data.";
   }
